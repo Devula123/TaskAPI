@@ -1,3 +1,98 @@
+## TaskAPI - REST API do zarządzania zadaniami (Tasks)
+
+Proste REST API (Laravel) do zarządzania zadaniami. API zwraca dane w formacie JSON i obsługuje statusy z logiką przejść.
+
+### Wymagania środowiskowe
+
+- PHP 8.2+ (w projekcie: PHP 8.5)
+- Composer
+- PostgreSQL uruchomione na `127.0.0.1:5432`
+- rozszerzenie PHP: `pdo_pgsql`
+
+### Uruchomienie lokalne
+
+1. Instalacja zależności:
+
+```powershell
+composer install
+```
+
+2. Konfiguracja `.env`:
+
+```powershell
+cp .env.example .env
+php artisan key:generate
+```
+
+Ustaw w `.env`:
+
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=RestAPI
+DB_USERNAME=postgres
+DB_PASSWORD=root
+```
+
+3. Migracje:
+
+```powershell
+php artisan migrate --force
+```
+
+4. Start serwera:
+
+```powershell
+php artisan serve
+```
+
+API: `http://127.0.0.1:8000/api`
+
+### Endpointy
+
+- `GET /tasks` - lista zadań
+- `POST /tasks` - tworzenie zadania (`title`)
+- `GET /tasks/{id}` - pobranie pojedynczego zadania
+- `PUT/PATCH /tasks/{id}` - aktualizacja (`title` i/lub `status`)
+- `DELETE /tasks/{id}` - usunięcie zadania
+
+### Statusy
+
+Statusy: `todo`, `in_progress`, `done`.
+
+Dozwolone przejścia są walidowane w `TaskService`.
+
+### Testy
+
+Testy uruchamiają się na osobnej bazie PostgreSQL `RestAPI_test` (zgodnie z `phpunit.xml`).
+
+1. Utwórz bazę testową (jednorazowo):
+
+```powershell
+php scripts/create_test_db.php
+```
+
+2. Uruchom testy:
+
+```powershell
+composer test
+```
+
+Możesz też uruchomić tylko jeden plik:
+
+```powershell
+php artisan test tests/Feature/TaskApiTest.php
+```
+
+### Architektura (krótko)
+
+- `TaskController` - warstwa HTTP (REST)
+- `TaskService` - logika biznesowa (m.in. walidacja przejść statusów)
+- `TaskRepositoryInterface` + `EloquentTaskRepository` - wzorzec Repository (DIP)
+- `TaskResource` - mapowanie modelu do odpowiedzi JSON
+- `TaskStatus` - enum statusów i dozwolonych przejść
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
