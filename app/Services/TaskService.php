@@ -41,7 +41,9 @@ class TaskService
                 ]);
             }
 
-            $current = $task->status;
+            $current = $task->status instanceof TaskStatus
+                ? $task->status->value
+                : (string) $task->status;
 
             if ($newStatus !== $current) {
                 $allowed = TaskStatus::allowedTransitions()[$current] ?? [];

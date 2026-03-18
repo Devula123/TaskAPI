@@ -3,47 +3,81 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
+use App\Http\Resources\TaskResource;
+use App\Models\Task;
+use App\Services\TaskService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class TaskController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
+    public function __construct(
+        private readonly TaskService $service,
+    ) {
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+
+    public function index(): ResourceCollection
     {
-        //
+        $tasks = $this->service->list();
+
+        return TaskResource::collection($tasks);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+
+    public function store(StoreTaskRequest $request): JsonResponse
     {
-        //
+        $task = $this->service->create($request->validated());
+
+        return (new TaskResource($task))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+
+    public function show(int $id): TaskResource|JsonResponse
     {
-        //
+        $task = Task::query()->find($id);
+
+        if (! $task) {
+            return response()->json([
+                'message' => 'Task not found.',
+            ], 404);
+        }
+
+        return new TaskResource($task);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function update(UpdateTaskRequest $request, int $id): TaskResource|JsonResponse
     {
-        //
+        $task = Task::query()->find($id);
+
+        if (! $task) {
+            return response()->json([
+                'message' => 'Task not found.',
+            ], 404);
+        }
+
+        $updated = $this->service->update($task, $request->validated());
+
+        return new TaskResource($updated);
+    }
+
+
+    public function destroy(int $id): JsonResponse
+    {
+        $task = Task::query()->find($id);
+
+        if (! $task) {
+            return response()->json([
+                'message' => 'Task not found.',
+            ], 404);
+        }
+
+        $this->service->delete($task);
+
+        return response()->json(null, 204);
     }
 }
